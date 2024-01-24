@@ -3,6 +3,7 @@
 //Default operation is 115200 baud
 //25 MHz clock
 // o_DATA_READY asserts for one clock cycle when rs data is ready to be sampled
+
 module UART_RX #(parameter BAUD_RATE=115200,
                  parameter CLK_FREQ=25000000)
   (input i_CLK,i_RX_SERIAL,i_RESET,
