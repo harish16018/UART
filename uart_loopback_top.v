@@ -1,3 +1,7 @@
+//This top-level circuit verifies the working of the UART using a loopback. 
+//It displays the ASCII value of the transmitted character on a seven-segment display and echoes it back to the pc
+
+`include "uartRX.v"
 `include "uartTX.v"
 `include "sseg.v"
 
