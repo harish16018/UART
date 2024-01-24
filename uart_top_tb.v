@@ -1,3 +1,5 @@
+//Simulates top-level loopback circuit
+
 module UART_top_tb;
   reg i_clk,i_reset,i_uart_rx;
   wire o_uart_tx;
