@@ -28,7 +28,7 @@ module UART_RX #(parameter BAUD_RATE=115200,
   reg [7:0] r_data,data_next;
   reg data_ready;
   
-  reg [1:0] fsm_state = 0,fsm_next;
+  reg [1:0] fsm_state,fsm_next;
   
   //Synchronizer
   always @ (posedge i_CLK)
@@ -60,7 +60,7 @@ module UART_RX #(parameter BAUD_RATE=115200,
   always @ (posedge i_CLK)
     if(i_RESET)
       begin
-        fsm_state <= 0;
+        fsm_state <= IDLE;
         r_bit <= 0;
         r_tick <= 0;
         r_data <= 0;
