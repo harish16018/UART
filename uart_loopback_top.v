@@ -6,7 +6,7 @@
 `include "sseg.v"
 
 
-module UART_top (input i_clk, i_reset,
+module UART_loopback_top (input i_clk, i_reset,
                           input i_uart_rx,
                           output o_uart_tx,
    output o_Segment1_A, //Segment 1 is upper digit of Rx output
