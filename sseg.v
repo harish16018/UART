@@ -23,7 +23,7 @@ module seven_seg (input i_CLK,i_RESET,
           4'b0110: hex_encoding = 7'b1011111;    //6
           4'b0111: hex_encoding = 7'b1110000;    //7
           4'b1000: hex_encoding = 7'b1111111;    //8
-          4'b1001: hex_encoding = 7'b1111001;    //9
+          4'b1001: hex_encoding = 7'b1111011;    //9
           4'b1010: hex_encoding = 7'b1110111;    //A
           4'b1011: hex_encoding = 7'b0011111;    //b
           4'b1100: hex_encoding = 7'b1001110;    //C
