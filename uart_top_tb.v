@@ -1,12 +1,29 @@
 //Simulates top-level loopback circuit
-
-module UART_top_tb;
-  reg i_clk,i_reset,i_uart_rx;
-  wire o_uart_tx;
+`include "uart_loopback_top.v"
+module loopback_tb;
+  reg i_clk,i_reset;
   
-  reg [6:0] seg1, seg2;
+  wire uart_tx_serial,uart_rx_serial;
   
-  localparam CLOCK_PERIOD_NS = 40;
+  reg tx_dr;
+  reg [7:0] tx_data;
+  
+  wire [7:0] rx_data;
+  wire rx_dr;
+  
+  UART_TX pcInstTx (.i_CLK(i_clk),
+                  .i_RESET(i_reset),
+                  .i_tx_DATA_READY(tx_dr),
+                  .i_tx_DATA(tx_data),
+                  .o_tx_SERIAL(uart_tx_serial));
+  
+  UART_RX pcInstRx (.i_CLK(i_clk),
+                 .i_RESET(i_reset),
+                 .i_RX_SERIAL(uart_rx_serial),
+                 .o_RX_DATA(rx_data),
+                 .o_DATA_READY(rx_dr));
+  
+    localparam CLOCK_PERIOD_NS = 40;
   
   //25 MHz clock
   always
@@ -26,86 +43,42 @@ module UART_top_tb;
       i_reset <= 1'b0;
     end
   endtask
-  
-  initial i_uart_rx = 1'b1;
-  
-  //Simulated tx of pc
-  task sim_tx;
-    input [7:0] d_in;
-    integer i;
-    reg [9:0] data_packet;;
-    begin
-      data_packet = {1'b1,d_in,1'b0};
-      $display("Transmitting %h",d_in);
-      i_uart_rx = data_packet[0];
-      for (i=1;i<10;i=i+1)
-        begin
-          #(CLOCK_PERIOD_NS * 217);
-          i_uart_rx = data_packet[i];
-        end
-      i_uart_rx = 1'b1;
-    end
-  endtask
-  
-  //Simulated rx of pc
-  task sim_rx;
-    reg [9:0] data_packet;
-    integer i;
-    begin
-      wait(o_uart_tx == 1'b0);
-      #(CLOCK_PERIOD_NS * 108);
-      data_packet[0] = o_uart_tx;
-      for (i=1;i<10;i=i+1)
-        begin
-          #(CLOCK_PERIOD_NS * 217);
-          data_packet[i] = o_uart_tx;
-        end
-      #(CLOCK_PERIOD_NS * 108);
-      $display("Received %h",data_packet[8:1]);
-    end
-  endtask
-  
+    
   UART_loopback_top dut (.i_clk(i_clk),.i_reset(i_reset),
-                         .i_uart_rx(i_uart_rx),.o_uart_tx(o_uart_tx),
-                         .o_Segment1_A(seg1[6]),
-                         .o_Segment1_B(seg1[5]),
-                         .o_Segment1_C(seg1[4]),
-                         .o_Segment1_D(seg1[3]),
-                         .o_Segment1_E(seg1[2]),
-                         .o_Segment1_F(seg1[1]),
-                         .o_Segment1_G(seg1[0]),
-                         .o_Segment2_A(seg2[6]),
-                         .o_Segment2_B(seg2[5]),
-                         .o_Segment2_C(seg2[4]),
-                         .o_Segment2_D(seg2[3]),
-                         .o_Segment2_E(seg2[2]),
-                         .o_Segment2_F(seg2[1]),
-                         .o_Segment2_G(seg2[0]));
+                         .i_uart_rx(uart_tx_serial),.o_uart_tx(uart_rx_serial));
   
-  task byte_from_keyboard;
-    input [7:0] d_byte;
-      fork
-        sim_tx(d_byte);
-        sim_rx;
-      join 
+  task sim_serial;
+    input [7:0] d_in;
+    begin
+      $display("Transmitting from PC %h",d_in);
+      tx_data <= d_in;
+      tx_dr <= 1'b1;
+      @(posedge i_clk);
+      @(posedge i_clk);
+      tx_dr <= 1'b0;
+      @(posedge rx_dr);
+      $display("Received at PC %h",rx_data); 
+    end
   endtask
   
   initial
     begin
       reset;
       
-      byte_from_keyboard(8'h31);
-      $display("%b %b",~seg1,~seg2);
+      #950;
+      sim_serial(8'h53);    
       
-      byte_from_keyboard(8'h4a);
-      $display("%b %b",~seg1,~seg2);
+      #950;
+      sim_serial(8'h53); 
       
-      byte_from_keyboard(8'hff);
-      $display("%b %b",~seg1,~seg2);
+      #900;
+      sim_serial(8'h53); 
       
-      byte_from_keyboard(8'h12);
-      $display("%b %b",~seg1,~seg2);
-      
+      #850;
+      sim_serial(8'h61); 
+
+      #769;
+      sim_serial(8'h61); 
       
       $finish;
     end
@@ -117,6 +90,3 @@ module UART_top_tb;
     end
   
 endmodule
-  
-                         
-                         
