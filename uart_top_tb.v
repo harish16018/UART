@@ -1,5 +1,7 @@
 //Simulates top-level loopback circuit
+
 `include "uart_loopback_top.v"
+
 module loopback_tb;
   reg i_clk,i_reset;
   
