@@ -1,19 +1,19 @@
 //This seven segment display uses a register to "hold" its value, so it can be easily viewed on the FPGA and changes its value only when the input changes
-module seven_seg (input i_CLK,i_RESET,
-                           input [3:0] i_BIN,
-                  output [6:0] o_HEX);
+module seven_seg (input i_clk,i_reset,
+                  input [3:0] i_bin,
+                  output [6:0] o_hex);
   
   reg [6:0] r_hex,hex_encoding;
   
-  always @ (posedge i_CLK)
-    if(i_RESET)
+  always @ (posedge i_clk)
+    if(i_reset)
       r_hex <= 7'b0000000;
     else
       r_hex <= hex_encoding;
   
   always @ (*)
     begin
-      case (i_BIN)
+      case (i_bin)
           4'b0000: hex_encoding = 7'b1111110;    //0
           4'b0001: hex_encoding = 7'b0110000;    //1
           4'b0010: hex_encoding = 7'b1101101;    //2
@@ -35,7 +35,7 @@ module seven_seg (input i_CLK,i_RESET,
       endcase
     end
   
-  assign o_HEX = r_hex;
+  assign o_hex = r_hex;
   
 endmodule
           
