@@ -2,9 +2,8 @@
 //Simple UART Tx that uses 8 data bits, 1 start bit, 1 stop bit, no parity
 //Default operation is 115200 baud
 //25 MHz clock
-// i_tx_DATA_READY must be asserted to start transmission when data is loaded
-// o_tx_BUSY is high while tx is transmitting
-// o_tx_DONE asserts for one clock when transmission is complete
+// i_tx_dr must be asserted to start transmission when data is loaded
+// o_tx_busy is high while tx is transmitting
 
 module UART_TX #(parameter CLK_FREQ=25000000,
                  parameter BAUD_RATE=115200)
