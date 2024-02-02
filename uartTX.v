@@ -6,118 +6,119 @@
 // o_tx_BUSY is high while tx is transmitting
 // o_tx_DONE asserts for one clock when transmission is complete
 
-module UART_TX #(parameter BAUD_RATE = 115200,
-                 parameter CLK_FREQ = 25000000)
+module UART_TX #(parameter CLK_FREQ=25000000,
+                 parameter BAUD_RATE=115200)
+  (input i_clk,i_reset,i_tx_dr,
+   input [7:0] i_data,
+   output o_serial,o_tx_busy);
   
-  (input i_CLK,i_RESET,i_tx_DATA_READY,
-   input [7:0] i_tx_DATA,
-   output o_tx_SERIAL,o_tx_BUSY,o_tx_DONE);
+  localparam CLKS_PER_BAUD = (CLK_FREQ/BAUD_RATE);
+  localparam BC_MAX_WIDTH = $clog2(CLKS_PER_BAUD);
   
-  localparam CLK_PER_BIT = CLK_FREQ/BAUD_RATE; //cyc per bit ~217 for 115200 baud at 25Mhz
-  localparam MAX_COUNT = CLK_PER_BIT-1;
-  localparam WIDTH = $clog2(CLK_PER_BIT);
+  localparam IDLE = 2'b00, START = 2'b01,
+             DATA = 2'b10, STOP = 2'b11;
   
-  localparam IDLE = 2'b00,
-             START = 2'b01,
-             DATA = 2'b10,
-             STOP = 2'b11;
-  
-  reg [WIDTH-1:0] r_baud;
-  wire baud_en;
-  reg [7:0] tx_r,tx_next;
-  reg tx_busy;
-  reg tx_done;
-  reg [1:0] fsm_state,fsm_next;
+  reg [BC_MAX_WIDTH-1:0] r_baud,baud_next;
   reg [2:0] r_bit,bit_next;
-  reg tx_serial;
+  reg [1:0] r_fsm,fsm_next;
+  reg [7:0] r_data,data_next;
+  reg serial;
+  reg busy;
+  reg baud_en;
   
-    
-  //Baud generator
-  always @ (posedge i_CLK)
-    if(i_RESET)
-      r_baud <= 0;
-    else if (r_baud == MAX_COUNT)
-      r_baud <= 0;
-    else
-      r_baud <= r_baud + 1;
-  assign baud_en = (r_baud == MAX_COUNT);
-  
-  //FSM state reg
-  always @ (posedge i_CLK)
-    if(i_RESET)
+  always @ (posedge i_clk)
+    if(i_reset)
       begin
-        fsm_state <= IDLE;
+        r_baud <= 0;
         r_bit <= 0;
-        tx_r <= 0;
+        r_fsm <= IDLE;
+        r_data <= 0;
       end
-  else
-    begin
-      fsm_state <= fsm_next;
-      r_bit <= bit_next;
-      tx_r <= tx_next;
-    end
-
+    else
+      begin
+        r_baud <= baud_next;
+        r_bit <= bit_next;
+        r_fsm <= fsm_next;
+        r_data <= data_next;
+      end
   
-  //FSM next state and output
   always @ (*)
     begin
-      fsm_next = fsm_state;
-      tx_next = tx_r;
+      fsm_next = r_fsm;
       bit_next = r_bit;
-      tx_busy = 1'b1;
-      tx_done = 1'b0;
+      baud_next = r_baud;
+      data_next = r_data;
+      serial = 1'b1;
+      busy = 1'b1;
+      baud_en = 0;
       
-      case (fsm_state)
+      case (r_fsm)
         IDLE:
           begin
-            tx_serial = 1'b1;
+            busy = 1'b0;
             bit_next = 0;
-            tx_busy = 1'b0;
-            if(i_tx_DATA_READY)
+            baud_next = 0;
+            if(i_tx_dr)
               begin
-                tx_next = i_tx_DATA;
                 fsm_next = START;
-              end 
+                data_next = i_data;
+              end
           end
         
         START:
-            begin
-              tx_serial = 1'b0;
-              if(baud_en)
+          begin
+            serial = 1'b0;
+            if(r_baud == (CLKS_PER_BAUD - 1))
+              begin
+                baud_en = 1;
                 fsm_next = DATA;
-            end 
+                baud_next = 0;
+              end
+            else
+              baud_next = r_baud + 1;
+          end
         
         DATA:
           begin
-            tx_serial = tx_r[r_bit];
-            if(baud_en)
-              if(r_bit == 7)
-                fsm_next = STOP;
-              else
-                begin
-                  bit_next = r_bit + 1;
-                  fsm_next = DATA;
-                end
-          end 
-        
+            serial = r_data[r_bit];
+            if(r_baud == (CLKS_PER_BAUD - 1))
+              begin
+                if(r_bit == 7)
+                  begin
+                    fsm_next = STOP;
+                    baud_next = 0;
+                  end
+                else
+                  begin
+                    bit_next = r_bit + 1;
+                    baud_next = 0;
+                  end
+                baud_en = 1;
+              end
+            else
+              baud_next = r_baud + 1;
+          end
+                    
         STOP:
           begin
-            tx_serial = 1'b1;
-            if(baud_en)
+            serial = 1'b1;
+            if(r_baud == (CLKS_PER_BAUD - 1))
               begin
-                tx_done = 1'b1;
-                tx_busy = 1'b0;
+                baud_en = 1;
                 fsm_next = IDLE;
+                busy = 1'b0;
               end
-          end 
-        
+            else
+              baud_next = r_baud + 1;
+          end
+                    
         default:
           fsm_next = IDLE;
+        
       endcase
     end
   
-  assign o_tx_SERIAL = tx_serial;
-  assign o_tx_DONE = tx_done;
-  assign o_tx_BUSY = tx_busy;
+  assign o_serial = serial;
+  assign o_tx_busy = busy;
   
 endmodule
