@@ -2,7 +2,7 @@
 //Simple UART Rx that uses 8 data bits, 1 start bit, 1 stop bit, no parity
 //Default operation is 115200 baud
 //25 MHz clock
-// o_DATA_READY asserts for one clock cycle when rs data is ready to be sampled
+// o_rx_done asserts for one clock cycle when rs data is ready to be sampled
 
 module UART_RX #(parameter CLK_FREQ=25000000,
                  parameter BAUD_RATE=115200)
