@@ -13,17 +13,17 @@ module loopback_tb;
   wire [7:0] rx_data;
   wire rx_dr;
   
-  UART_TX pcInstTx (.i_CLK(i_clk),
-                  .i_RESET(i_reset),
-                  .i_tx_DATA_READY(tx_dr),
-                  .i_tx_DATA(tx_data),
-                  .o_tx_SERIAL(uart_tx_serial));
+  UART_TX pcInstTx (.i_clk(i_clk),
+                  .i_reset(i_reset),
+                  .i_tx_dr(tx_dr),
+                  .i_data(tx_data),
+                  .o_serial(uart_tx_serial));
   
-  UART_RX pcInstRx (.i_CLK(i_clk),
-                 .i_RESET(i_reset),
-                 .i_RX_SERIAL(uart_rx_serial),
-                 .o_RX_DATA(rx_data),
-                 .o_DATA_READY(rx_dr));
+  UART_RX pcInstRx (.i_clk(i_clk),
+                 .i_reset(i_reset),
+                 .i_serial(uart_rx_serial),
+                 .o_data(rx_data),
+                 .o_rx_done(rx_dr));
   
     localparam CLOCK_PERIOD_NS = 40;
   
@@ -71,16 +71,16 @@ module loopback_tb;
       sim_serial(8'h53);    
       
       #950;
-      sim_serial(8'h53); 
+      sim_serial(8'hff); 
       
       #900;
-      sim_serial(8'h53); 
+      sim_serial(8'h61); 
       
       #850;
-      sim_serial(8'h61); 
+      sim_serial(8'h4a); 
 
       #769;
-      sim_serial(8'h61); 
+      sim_serial(8'h32); 
       
       $finish;
     end
@@ -92,3 +92,5 @@ module loopback_tb;
     end
   
 endmodule
+                 
+                  
