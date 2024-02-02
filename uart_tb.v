@@ -7,26 +7,25 @@ module UART_tb;
   reg i_clk;
   reg i_tx_dr,i_reset;
   reg [7:0] i_tx_data;
-  wire uart_serial,o_tx_busy, o_tx_done;
+  wire uart_serial,o_tx_busy;
   wire [7:0] o_rx_data;
   wire o_rx_dr;
   
   
   localparam CLOCK_PERIOD_NS = 40;
   
-  UART_TX uut (.i_CLK(i_clk),
-              .i_tx_DATA_READY(i_tx_dr),
-              .i_tx_DATA(i_tx_data),
-               .i_RESET(i_reset),
-              .o_tx_SERIAL(uart_serial),
-              .o_tx_BUSY(o_tx_busy),
-              .o_tx_DONE(o_tx_done));
+  UART_tx uut (.i_clk(i_clk),
+              .i_tx_dr(i_tx_dr),
+              .i_data(i_tx_data),
+               .i_reset(i_reset),
+              .o_serial(uart_serial),
+               .o_tx_busy(o_tx_busy));
   
-  UART_RX rx_inst (.i_CLK(i_clk),
-                   .i_RESET(i_reset),
-                  .i_RX_SERIAL(uart_serial),
-                  .o_RX_DATA(o_rx_data),
-                  .o_DATA_READY(o_rx_dr));
+  UART_rx rx_inst (.i_clk(i_clk),
+                   .i_reset(i_reset),
+                  .i_serial(uart_serial),
+                  .o_data(o_rx_data),
+                  .o_rx_done(o_rx_dr));
   
   //Generate 25 MHz clk
   always
@@ -84,18 +83,18 @@ module UART_tb;
     begin
       reset;
       
-      data_transfer(8'h31);
+      data_transfer(8'h53);
       
-      @(posedge o_tx_done);
-      data_transfer(8'hff);
+      @(negedge o_tx_busy);
+      data_transfer(8'h61);
 
-      @(posedge o_tx_done);
+      @(negedge o_tx_busy);
       data_transfer(8'h4a);
       
-      @(posedge o_tx_done);
+      @(negedge o_tx_busy);
       data_transfer(8'h1);
 
-      @(posedge o_tx_done);
+      @(negedge o_tx_busy);
       data_transfer(8'h2d);
       
       $finish;
@@ -109,6 +108,3 @@ module UART_tb;
     end
   
 endmodule
-      
-      
-      
