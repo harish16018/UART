@@ -29,19 +29,23 @@ module UART_loopback_top (input i_clk, i_reset,
   wire rx_data_ready;
   wire [7:0] rx_data;
   
+  wire tx_busy;
+  wire tx_serial;
+  
   wire [6:0] seg1, seg2;
   
-  UART_TX uart_tx_inst (.i_CLK(i_clk),.i_RESET(i_reset),
-                        .i_tx_DATA_READY(rx_data_ready),
-                        .i_tx_DATA(rx_data),
-                        .o_tx_SERIAL(o_uart_tx),
-                        .o_tx_BUSY(),
-                        .o_tx_DONE());
+  UART_TX uart_tx_inst (.i_clk(i_clk),.i_reset(i_reset),
+                        .i_tx_dr(rx_data_ready),
+                        .i_data(rx_data),
+                        .o_serial(tx_serial),
+                        .o_tx_busy(tx_busy));
   
-  UART_RX uart_rx_inst (.i_CLK(i_clk),.i_RESET(i_reset),
-                        .i_RX_SERIAL(i_uart_rx),
-                        .o_RX_DATA(rx_data),
-                        .o_DATA_READY(rx_data_ready));
+  UART_RX uart_rx_inst (.i_clk(i_clk),.i_reset(i_reset),
+                        .i_serial(i_uart_rx),
+                        .o_data(rx_data),
+                        .o_rx_done(rx_data_ready));
+  
+  assign o_uart_tx = tx_serial;
   
   seven_seg segment1 (.i_CLK(i_clk),.i_RESET(i_reset),
                   .i_BIN(rx_data[7:4]),
