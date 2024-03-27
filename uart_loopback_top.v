@@ -47,12 +47,10 @@ module UART_loopback_top (input i_clk, i_reset,
   
   assign o_uart_tx = tx_serial;
   
-  seven_seg segment1 (.i_clk(i_clk),.i_reset(i_reset),
-                  .i_bin(rx_data[7:4]),
+  seven_seg segment1 (.i_bin(rx_data[7:4]),
                    .o_hex(seg1));
   
-  seven_seg segment2 (.i_clk(i_clk),.i_reset(i_reset),
-                   .i_bin(rx_data[3:0]),
+  seven_seg segment2 (.i_bin(rx_data[3:0]),
                   .o_hex(seg2)); 
   
   assign o_Segment1_A = ~seg1[6]; //Seven segment display used uses active-low signals
